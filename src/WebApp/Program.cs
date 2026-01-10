@@ -1,4 +1,4 @@
-﻿using eShop.WebApp.Components;
+using eShop.WebApp.Components;
 using eShop.ServiceDefaults;
 using Microsoft.AspNetCore.HttpOverrides;
 
@@ -12,29 +12,47 @@ builder.AddApplicationServices();
 
 var app = builder.Build();
 
+// -----------------------------------------------------------------------------
+// 1. DÜZELTME: Forwarded Headers Ayarı (En üstte olmalı)
+// -----------------------------------------------------------------------------
 var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 };
-forwardedHeadersOptions.KnownIPNetworks.Clear();
+
+// DİKKAT: 'KnownIPNetworks' değil, 'KnownNetworks' olmalı.
+forwardedHeadersOptions.KnownNetworks.Clear(); 
 forwardedHeadersOptions.KnownProxies.Clear();
+
 app.UseForwardedHeaders(forwardedHeadersOptions);
+// -----------------------------------------------------------------------------
 
 app.MapDefaultEndpoints();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-app.UseAntiforgery();
-
+// -----------------------------------------------------------------------------
+// 2. DÜZELTME: HTTPS Yönlendirmesi (Headers ayarından SONRA gelmeli)
+// -----------------------------------------------------------------------------
+// Not: K8s Ingress kullanıyorsanız bazen UseHttpsRedirection döngüye (loop)
+// sebep olabilir. Eğer "Too many redirects" hatası alırsanız bu satırı yorum satırı yapın.
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+
+// -----------------------------------------------------------------------------
+// 3. KRİTİK EKSİK: Authentication ve Authorization Middleware'leri
+// -----------------------------------------------------------------------------
+app.UseAntiforgery();
+
+// Bu ikisi mutlaka eklenmeli, yoksa login olduktan sonra kullanıcı 
+// hala "anonymous" (giriş yapmamış) görünür.
+app.UseAuthentication(); 
+app.UseAuthorization();
 
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
