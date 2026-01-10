@@ -39,6 +39,24 @@
         // client want to access resources (aka scopes)
         public static IEnumerable<Client> GetClients(IConfiguration configuration)
         {
+            var webAppClient = configuration["WebAppClient"]?.TrimEnd('/');
+            var webAppClientHttp = webAppClient?.Replace("https://", "http://");
+            var webAppRedirectUris = new List<string>();
+            var webAppPostLogoutRedirectUris = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(webAppClient))
+            {
+                webAppRedirectUris.Add($"{webAppClient}/signin-oidc");
+                webAppPostLogoutRedirectUris.Add($"{webAppClient}/signout-callback-oidc");
+            }
+
+            if (!string.IsNullOrWhiteSpace(webAppClientHttp) &&
+                !string.Equals(webAppClientHttp, webAppClient, StringComparison.OrdinalIgnoreCase))
+            {
+                webAppRedirectUris.Add($"{webAppClientHttp}/signin-oidc");
+                webAppPostLogoutRedirectUris.Add($"{webAppClientHttp}/signout-callback-oidc");
+            }
+
             return new List<Client>
             {
                 new Client
@@ -81,21 +99,15 @@
                     {
                         new Secret("secret".Sha256())
                     },
-                    ClientUri = $"{configuration["WebAppClient"]}",                             // public uri of the client
+                    ClientUri = $"{webAppClient}",                             // public uri of the client
                     AllowedGrantTypes = GrantTypes.Code,
                     AllowAccessTokensViaBrowser = false,
                     RequireConsent = false,
                     AllowOfflineAccess = true,
                     AlwaysIncludeUserClaimsInIdToken = true,
                     RequirePkce = false,
-                    RedirectUris = new List<string>
-                    {
-                        $"{configuration["WebAppClient"]}/signin-oidc"
-                    },
-                    PostLogoutRedirectUris = new List<string>
-                    {
-                        $"{configuration["WebAppClient"]}/signout-callback-oidc"
-                    },
+                    RedirectUris = webAppRedirectUris,
+                    PostLogoutRedirectUris = webAppPostLogoutRedirectUris,
                     AllowedScopes = new List<string>
                     {
                         IdentityServerConstants.StandardScopes.OpenId,
