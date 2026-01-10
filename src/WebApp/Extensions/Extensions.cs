@@ -84,6 +84,15 @@ public static class Extensions
             options.Scope.Add("profile");
             options.Scope.Add("orders");
             options.Scope.Add("basket");
+            options.Events = new OpenIdConnectEvents
+            {
+                OnRedirectToIdentityProvider = context =>
+                {
+                    var callbackBase = callBackUrl.TrimEnd('/');
+                    context.ProtocolMessage.RedirectUri = $"{callbackBase}{options.CallbackPath}";
+                    return Task.CompletedTask;
+                }
+            };
         });
 
         // Blazor auth services
