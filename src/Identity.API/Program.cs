@@ -49,7 +49,7 @@ var forwardedHeadersOptions = new ForwardedHeadersOptions
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 };
 forwardedHeadersOptions.KnownIPNetworks.Clear();
-forwardedHeadersOptions.KnownIPProxies.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
 app.UseForwardedHeaders(forwardedHeadersOptions);
 
 app.MapDefaultEndpoints();
