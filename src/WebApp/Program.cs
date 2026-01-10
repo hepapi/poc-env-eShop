@@ -13,15 +13,16 @@ builder.AddApplicationServices();
 var app = builder.Build();
 
 // -----------------------------------------------------------------------------
-// 1. DÜZELTME: Forwarded Headers Ayarı (En üstte olmalı)
+// 1. Forwarded Headers Ayarı (En üstte olması kritik)
 // -----------------------------------------------------------------------------
 var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 };
 
-// DİKKAT: 'KnownIPNetworks' değil, 'KnownNetworks' olmalı.
-forwardedHeadersOptions.KnownNetworks.Clear(); 
+// .NET 10 ile gelen değişiklik: KnownNetworks yerine KnownIPNetworks kullanılır.
+// Konteyner ortamında Load Balancer IP'si değişebileceği için listeyi temizliyoruz.
+forwardedHeadersOptions.KnownIPNetworks.Clear();
 forwardedHeadersOptions.KnownProxies.Clear();
 
 app.UseForwardedHeaders(forwardedHeadersOptions);
@@ -29,30 +30,28 @@ app.UseForwardedHeaders(forwardedHeadersOptions);
 
 app.MapDefaultEndpoints();
 
+// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
+    // The default HSTS value is 30 days.
     app.UseHsts();
 }
 
-// -----------------------------------------------------------------------------
-// 2. DÜZELTME: HTTPS Yönlendirmesi (Headers ayarından SONRA gelmeli)
-// -----------------------------------------------------------------------------
-// Not: K8s Ingress kullanıyorsanız bazen UseHttpsRedirection döngüye (loop)
-// sebep olabilir. Eğer "Too many redirects" hatası alırsanız bu satırı yorum satırı yapın.
+app.UseAntiforgery();
+
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
 // -----------------------------------------------------------------------------
-// 3. KRİTİK EKSİK: Authentication ve Authorization Middleware'leri
+// 2. EKLENEN KISIM: Authentication ve Authorization
 // -----------------------------------------------------------------------------
-app.UseAntiforgery();
-
-// Bu ikisi mutlaka eklenmeli, yoksa login olduktan sonra kullanıcı 
-// hala "anonymous" (giriş yapmamış) görünür.
-app.UseAuthentication(); 
+// Bu satırlar olmadan IdentityServer'dan dönen token işlenemez 
+// ve kullanıcı giriş yapmış sayılmaz.
+app.UseAuthentication();
 app.UseAuthorization();
+// -----------------------------------------------------------------------------
 
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
