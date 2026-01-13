@@ -1,5 +1,7 @@
+using System.IO;
 using eShop.WebApp.Components;
 using eShop.ServiceDefaults;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +11,10 @@ builder.AddServiceDefaults();
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
 builder.AddApplicationServices();
+
+// Persist Data Protection keys to the mounted PVC so OIDC state can be decrypted after restarts.
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"));
 
 var app = builder.Build();
 
