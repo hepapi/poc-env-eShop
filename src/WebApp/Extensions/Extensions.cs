@@ -94,7 +94,18 @@ public static class Extensions
                     var callbackBase = callBackUrl.TrimEnd('/');
                     context.ProtocolMessage.RedirectUri = $"{callbackBase}{options.CallbackPath}";
                     return Task.CompletedTask;
-                }
+                },
+                OnRemoteFailure = context =>
+                {
+                    var message = context.Failure?.Message ?? string.Empty;
+                    if (message.Contains("invalid_grant", StringComparison.OrdinalIgnoreCase) ||
+                        message.Contains("Correlation failed", StringComparison.OrdinalIgnoreCase))
+                    {
+                        context.Response.Redirect("/");
+                        context.HandleResponse();
+                    }
+                    return Task.CompletedTask;
+                },
             };
         });
 
