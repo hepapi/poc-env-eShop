@@ -99,7 +99,8 @@ public static class Extensions
                 {
                     var message = context.Failure?.Message ?? string.Empty;
                     if (message.Contains("invalid_grant", StringComparison.OrdinalIgnoreCase) ||
-                        message.Contains("Correlation failed", StringComparison.OrdinalIgnoreCase))
+                        message.Contains("Correlation failed", StringComparison.OrdinalIgnoreCase) ||
+                        message.Contains("Unable to unprotect the message.State", StringComparison.OrdinalIgnoreCase))
                     {
                         context.Response.Redirect("/");
                         context.HandleResponse();
