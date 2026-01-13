@@ -77,6 +77,7 @@ public static class Extensions
             options.ClientId = "webapp";
             options.ClientSecret = "secret";
             options.ResponseType = "code";
+            options.ResponseMode = "query";
             options.UsePkce = false;
             options.PushedAuthorizationBehavior = PushedAuthorizationBehavior.Disable;
             options.SaveTokens = true;
