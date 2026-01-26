@@ -44,8 +44,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseAntiforgery();
-
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
@@ -53,11 +51,13 @@ app.UseStaticFiles();
 // -----------------------------------------------------------------------------
 // 2. EKLENEN KISIM: Authentication ve Authorization
 // -----------------------------------------------------------------------------
-// Bu satırlar olmadan IdentityServer'dan dönen token işlenemez 
+// Bu satırlar olmadan IdentityServer'dan dönen token işlenemez
 // ve kullanıcı giriş yapmış sayılmaz.
 app.UseAuthentication();
 app.UseAuthorization();
 // -----------------------------------------------------------------------------
+
+app.UseAntiforgery();
 
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
